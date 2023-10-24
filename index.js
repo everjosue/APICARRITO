@@ -60,6 +60,36 @@ app.post('/CrearProductos', (req, res) => {
 });
 
 
+// Esta es la nueva ruta para buscar productos
+app.get('/buscarProductos', (req, res) => {
+    const searchTerm = req.query.term; // Obtiene el término de búsqueda de la consulta
+
+    // Valida que se haya proporcionado un término de búsqueda
+    if (!searchTerm) {
+        return res.status(400).json({ message: 'Término de búsqueda no proporcionado' });
+    }
+
+    // Crea una conexión a la base de datos
+    const connection = mysql.createConnection(credenciales);
+
+    // Realiza una consulta SQL para buscar productos que coincidan con el término
+    const sql = 'SELECT * FROM productos WHERE nombre LIKE ? OR descripcion LIKE ?';
+    const values = [`%${searchTerm}%`, `%${searchTerm}%`];
+
+    connection.query(sql, values, (err, results) => {
+        if (err) {
+            console.error('Error al buscar productos:', err);
+            return res.status(500).json({ message: 'Error al buscar productos' });
+        }
+
+        // Envía los resultados de la búsqueda como respuesta
+        res.json(results);
+    });
+
+    // Cierra la conexión a la base de datos
+    connection.end();
+});
+
 
 
 
