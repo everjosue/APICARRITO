@@ -25,7 +25,31 @@ app.get('/productos', (req, res) => {
         res.json(results);
     });
     connection.end();
+
+
 });
+
+app.get('/productos/detalles', (req, res) => {
+    const idProducto = req.query.idproducto;
+ // Obtén el idproducto de los parámetros de la ruta
+ console.log('ID del producto recibido en la API:', idProducto);
+
+    const connection = mysql.createConnection(credenciales);
+    connection.query('SELECT * FROM productos WHERE idproducto = ?', [idProducto], (err, results) => {
+        if (err) {
+            console.error('Error executing query: ' + err.stack);
+            return;
+        }
+
+        if (results.length > 0) {
+            res.json(results[0]); // Devuelve los detalles del producto encontrado
+        } else {
+            res.status(404).json({ message: 'Producto no encontrado' });
+        }
+    });
+    connection.end();
+});
+
 
 
 
@@ -89,6 +113,60 @@ app.get('/buscarProductos', (req, res) => {
     // Cierra la conexión a la base de datos
     connection.end();
 });
+
+// Ruta para eliminar un producto por su ID
+// Ruta para eliminar un producto por su ID
+app.delete('/borrarproductos/:idproducto', (req, res) => {
+    const idProducto = req.params.idproducto;
+  
+    // Crea una conexión a la base de datos
+    const connection = mysql.createConnection(credenciales);
+  
+    // Ejecuta una consulta SQL para eliminar el producto por su ID
+    const sql = 'DELETE FROM productos WHERE idproducto = ?';
+    const values = [idProducto];
+  
+    connection.query(sql, values, (err, result) => {
+      if (err) {
+        console.error('Error al eliminar el producto:', err);
+        return res.status(500).json({ message: 'Error al eliminar el producto' });
+      }
+  
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ message: 'Producto no encontrado' });
+      }
+  
+      // Producto eliminado con éxito
+      res.json({ message: 'Producto eliminado con éxito' });
+    });
+  
+    // Cierra la conexión a la base de datos
+    connection.end();
+});
+
+app.put('/actualizarProducto/:id', (req, res) => {
+    const idProducto = req.params.id;
+    const { nombre, marca, modelo, precio, descripcion, imgprincipal, imagenes } = req.body;
+    if (!nombre || !marca || !modelo || !precio || !descripcion || !imgprincipal) {
+        return res.status(400).json({ message: 'Faltan campos obligatorios' });
+    }
+    const connection = mysql.createConnection(credenciales);
+    const sql = 'UPDATE productos SET nombre = ?, marca = ?, modelo = ?, precio = ?, descripcion = ?, imgprincipal = ?, imagenes = ? WHERE idproducto = ?';
+    const values = [nombre, marca, modelo, precio, descripcion, imgprincipal, imagenes, idProducto];
+    connection.query(sql, values, (err, result) => {
+        if (err) {
+            console.error('Error al actualizar el producto:', err);
+            return res.status(500).json({ message: 'Error al actualizar el producto' });
+        }
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: 'Producto no encontrado' });
+        }
+        res.json({ message: 'Producto actualizado con éxito' });
+    });
+    connection.end();
+});
+
+  
 
 
 
